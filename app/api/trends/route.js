@@ -29,27 +29,40 @@ async function getGoogleTrends(artists, geo) {
 }
 
 async function getDailyTrends(geo) {
+  const queries = {
+    NG: 'Nigeria trending news today',
+    ZA: 'South Africa trending news today',
+    GH: 'Ghana trending news today',
+    KE: 'Kenya trending news today'
+  };
+  
   try {
-    const googleTrends = require('google-trends-api');
-    const result = await googleTrends.dailyTrends({
-      geo: geo,
-    });
-    const data = JSON.parse(result);
-    const trends = data.default.trendingSearchesDays[0]?.trendingSearches || [];
-    return trends.slice(0, 10).map(trend => ({
-      title: trend.title.query,
-      traffic: trend.formattedTraffic,
-      articles: trend.articles?.slice(0, 2).map(a => ({
-        title: a.title,
-        source: a.source,
-        url: a.url
-      })) || []
-    }));
+    const query = queries[geo] || 'Africa news today';
+    const res = await fetch(
+      `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en&gl=${geo}&ceid=${geo}:en`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    const xml = await res.text();
+    const items = [];
+    const regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<\/item>/g;
+    let match;
+    while ((match = regex.exec(xml)) && items.length < 8) {
+      const title = match[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/ - .*$/, '').trim();
+      items.push({
+        title: title,
+        traffic: '🔥 Trending',
+        articles: [{
+          title: title,
+          source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+          url: match[2].trim()
+        }]
+      });
+    }
+    return items;
   } catch (e) {
     return [];
   }
 }
-
 async function getNews(query) {
   try {
     const res = await fetch(
