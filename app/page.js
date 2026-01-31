@@ -118,26 +118,64 @@ export default function Dashboard() {
           </div>
         )}
 
-        {activeTab === 'stories' && data?.stories && (
+        {activeTab === 'stories' && (
           <div>
-            <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>✍️ Story Ideas</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
-              {data.stories.map((story, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{story.type}</span>
-                    <span style={{ padding: '4px 10px', background: 'rgba(244,67,54,0.2)', color: '#F44336', borderRadius: '100px', fontSize: '10px' }}>🔥 HOT</span>
+            <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>✍️ Story Ideas from Latest News</h2>
+            
+            {data?.stories && data.stories.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+                {data.stories.map((story, i) => (
+                  <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '11px', color: '#1DB954', textTransform: 'uppercase' }}>{story.type}</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{story.date}</span>
+                    </div>
+                    <h4 style={{ margin: '0 0 8px', fontSize: '15px', lineHeight: '1.4' }}>{story.headline}</h4>
+                    <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                      Source: {story.source}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                      {story.angles.map((angle, j) => (
+                        <span key={j} style={{ padding: '4px 10px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontSize: '11px' }}>{angle}</span>
+                      ))}
+                    </div>
+                    {story.url && (
+                      <a href={story.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#1DB954', textDecoration: 'none' }}>
+                        Read full article →
+                      </a>
+                    )}
                   </div>
-                  <p style={{ margin: '0 0 8px', fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>{story.hook}</p>
-                  <h4 style={{ margin: '0 0 12px', fontSize: '15px', color: '#1DB954' }}>{story.headline}</h4>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {story.angles.map((angle, j) => (
-                      <span key={j} style={{ padding: '4px 10px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontSize: '11px' }}>{angle}</span>
-                    ))}
+                ))}
+              </div>
+            )}
+
+            <h3 style={{ margin: '32px 0 16px', fontSize: '16px' }}>📰 Latest Headlines by Category</h3>
+            
+            {data?.news && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                {Object.entries(data.news).map(([category, articles]) => (
+                  <div key={category} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(29,185,84,0.1)' }}>
+                      <h4 style={{ margin: 0, fontSize: '14px', color: '#1DB954' }}>
+                        {category === 'afrobeats' && '🎵 Afrobeats'}
+                        {category === 'amapiano' && '🇿🇦 Amapiano'}
+                        {category === 'nigeriaCulture' && '🇳🇬 Nigeria Culture'}
+                        {category === 'southAfricaCulture' && '🇿🇦 SA Culture'}
+                        {category === 'africanMusic' && '🌍 African Music Industry'}
+                      </h4>
+                    </div>
+                    <div style={{ padding: '12px 20px' }}>
+                      {articles.slice(0, 4).map((article, i) => (
+                        <a key={i} href={article.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}>
+                          <div style={{ fontSize: '13px', lineHeight: '1.4', marginBottom: '4px' }}>{article.title}</div>
+                          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{article.source} • {article.date}</div>
+                        </a>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

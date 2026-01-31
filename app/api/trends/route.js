@@ -50,20 +50,25 @@ async function getDailyTrends(geo) {
   }
 }
 
-async function getRelatedTopics(keyword, geo) {
+async function getNews(query) {
   try {
-    const googleTrends = require('google-trends-api');
-    const result = await googleTrends.relatedTopics({
-      keyword: keyword,
-      geo: geo,
-    });
-    const data = JSON.parse(result);
-    const rising = data.default.rankedList[1]?.rankedKeyword || [];
-    return rising.slice(0, 5).map(item => ({
-      topic: item.topic.title,
-      type: item.topic.type,
-      growth: item.formattedValue
-    }));
+    const res = await fetch(
+      `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-NG&gl=NG&ceid=NG:en`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    const xml = await res.text();
+    const items = [];
+    const regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
+    let match;
+    while ((match = regex.exec(xml)) && items.length < 5) {
+      items.push({
+        title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+        url: match[2].trim(),
+        source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+        date: new Date(match[4]).toLocaleDateString()
+      });
+    }
+    return items;
   } catch (e) {
     return [];
   }
@@ -136,48 +141,6 @@ function getBackupSpotifyData(country) {
   return backup[country] || backup['🇳🇬 Nigeria'];
 }
 
-function generateStoryIdeas(trends, rankings) {
-  const stories = [];
-  
-  // Generate stories from trending topics
-  if (trends.NIGERIA && trends.NIGERIA.length > 0) {
-    const topTrend = trends.NIGERIA[0];
-    stories.push({
-      type: 'Trending in Nigeria',
-      hook: `"${topTrend.title}" is trending with ${topTrend.traffic} searches`,
-      headline: `What's Behind the "${topTrend.title}" Trend in Nigeria?`,
-      angles: ['Social media reactions', 'Cultural context', 'Expert opinions']
-    });
-  }
-  
-  if (trends.SOUTH_AFRICA && trends.SOUTH_AFRICA.length > 0) {
-    const topTrend = trends.SOUTH_AFRICA[0];
-    stories.push({
-      type: 'Trending in South Africa',
-      hook: `"${topTrend.title}" is trending with ${topTrend.traffic} searches`,
-      headline: `South Africa is Buzzing About "${topTrend.title}"`,
-      angles: ['Local perspective', 'Twitter reactions', 'Background story']
-    });
-  }
-
-  // Add music-based stories
-  stories.push({
-    type: 'Music Trend',
-    hook: 'Wizkid & Asake\'s "Jogodo" hits 11M streams',
-    headline: '"The REAL Vol. 1 Effect: How Wizkid & Asake Broke Records"',
-    angles: ['Behind the collab', 'Producer spotlight', 'Fan reactions']
-  });
-  
-  stories.push({
-    type: 'Rising Artist',
-    hook: 'New artists are breaking through across Africa',
-    headline: '"The Next Generation: Rising African Artists to Watch"',
-    angles: ['Artist profiles', 'Sound evolution', 'Industry impact']
-  });
-
-  return stories;
-}
-
 export async function GET() {
   const regions = {
     NIGERIA: { geo: 'NG', artists: ['Wizkid', 'Burna Boy', 'Davido', 'Asake', 'Rema'] },
@@ -192,23 +155,20 @@ export async function GET() {
     rankings[name] = await getGoogleTrends(config.artists, config.geo);
   }
 
-  // Get daily trending topics (non-music)
+  // Get daily trending topics
   const trendingTopics = {};
   for (const [name, config] of Object.entries(regions)) {
     trendingTopics[name] = await getDailyTrends(config.geo);
   }
 
-  // Get related cultural topics
-  const culturalTopics = {};
-  const cultureKeywords = {
-    NIGERIA: 'Nigeria news',
-    SOUTH_AFRICA: 'South Africa news',
-    GHANA: 'Ghana news',
-    KENYA: 'Kenya news'
+  // Get news headlines
+  const news = {
+    afrobeats: await getNews('Afrobeats music'),
+    amapiano: await getNews('Amapiano music South Africa'),
+    nigeriaCulture: await getNews('Nigeria entertainment culture'),
+    southAfricaCulture: await getNews('South Africa entertainment culture'),
+    africanMusic: await getNews('African music industry')
   };
-  for (const [name, keyword] of Object.entries(cultureKeywords)) {
-    culturalTopics[name] = await getRelatedTopics(keyword, regions[name].geo);
-  }
 
   // Spotify charts
   const spotifyCountries = [
@@ -223,13 +183,73 @@ export async function GET() {
     spotify[country.name] = await getSpotifyCharts(country.name, country.code);
   }
 
-  // Generate story ideas from trends
-  const stories = generateStoryIdeas(trendingTopics, rankings);
+  // Generate stories from news
+  const stories = [];
+  
+  if (news.afrobeats.length > 0) {
+    stories.push({
+      type: 'Afrobeats News',
+      hook: news.afrobeats[0].title,
+      headline: news.afrobeats[0].title,
+      source: news.afrobeats[0].source,
+      url: news.afrobeats[0].url,
+      date: news.afrobeats[0].date,
+      angles: ['Artist reaction', 'Industry impact', 'Fan perspective']
+    });
+  }
+
+  if (news.amapiano.length > 0) {
+    stories.push({
+      type: 'Amapiano News',
+      hook: news.amapiano[0].title,
+      headline: news.amapiano[0].title,
+      source: news.amapiano[0].source,
+      url: news.amapiano[0].url,
+      date: news.amapiano[0].date,
+      angles: ['Scene update', 'Producer spotlight', 'Club culture']
+    });
+  }
+
+  if (news.nigeriaCulture.length > 0) {
+    stories.push({
+      type: 'Nigeria Culture',
+      hook: news.nigeriaCulture[0].title,
+      headline: news.nigeriaCulture[0].title,
+      source: news.nigeriaCulture[0].source,
+      url: news.nigeriaCulture[0].url,
+      date: news.nigeriaCulture[0].date,
+      angles: ['Social media buzz', 'Youth perspective', 'Cultural context']
+    });
+  }
+
+  if (news.southAfricaCulture.length > 0) {
+    stories.push({
+      type: 'South Africa Culture',
+      hook: news.southAfricaCulture[0].title,
+      headline: news.southAfricaCulture[0].title,
+      source: news.southAfricaCulture[0].source,
+      url: news.southAfricaCulture[0].url,
+      date: news.southAfricaCulture[0].date,
+      angles: ['Local reaction', 'Trend analysis', 'Expert take']
+    });
+  }
+
+  if (news.africanMusic.length > 0) {
+    stories.push({
+      type: 'African Music Industry',
+      hook: news.africanMusic[0].title,
+      headline: news.africanMusic[0].title,
+      source: news.africanMusic[0].source,
+      url: news.africanMusic[0].url,
+      date: news.africanMusic[0].date,
+      angles: ['Business angle', 'Artist perspective', 'Global impact']
+    });
+  }
 
   const data = {
     rankings,
     trendingTopics,
-    culturalTopics,
+    news,
     rising: [
       { name: 'Mavo', country: '🇳🇬', change: '+890%', reason: '"Tumo Weto" viral on TikTok' },
       { name: 'Shoday', country: '🇳🇬', change: '+720%', reason: '"Paparazzi" collab with FOLA' },
