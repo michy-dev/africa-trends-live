@@ -69,7 +69,7 @@ export default function Dashboard() {
       </div>
 
       <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '0 32px', overflowX: 'auto' }}>
-        {tabs.map(tab => (
+        {tabs.map((tab) => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: '14px 24px', background: 'transparent', border: 'none', borderBottom: activeTab === tab.id ? '2px solid #1DB954' : '2px solid transparent', color: activeTab === tab.id ? '#fff' : 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap' }}>{tab.label}</button>
         ))}
       </div>
@@ -128,12 +128,14 @@ export default function Dashboard() {
                   <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                       <span style={{ fontSize: '11px', color: '#1DB954', textTransform: 'uppercase' }}>{story.type}</span>
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{story.date}</span>
+                      {story.date && <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{story.date}</span>}
                     </div>
                     <h4 style={{ margin: '0 0 8px', fontSize: '15px', lineHeight: '1.4' }}>{story.headline}</h4>
-                    <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
-                      Source: {story.source}
-                    </p>
+                    {story.source && (
+                      <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                        Source: {story.source}
+                      </p>
+                    )}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
                       {story.angles.map((angle, j) => (
                         <span key={j} style={{ padding: '4px 10px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontSize: '11px' }}>{angle}</span>
@@ -149,31 +151,32 @@ export default function Dashboard() {
               </div>
             )}
 
-            <h3 style={{ margin: '32px 0 16px', fontSize: '16px' }}>📰 Latest Headlines by Category</h3>
-            
             {data?.news && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-                {Object.entries(data.news).map(([category, articles]) => (
-                  <div key={category} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden' }}>
-                    <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(29,185,84,0.1)' }}>
-                      <h4 style={{ margin: 0, fontSize: '14px', color: '#1DB954' }}>
-                        {category === 'afrobeats' && '🎵 Afrobeats'}
-                        {category === 'amapiano' && '🇿🇦 Amapiano'}
-                        {category === 'nigeriaCulture' && '🇳🇬 Nigeria Culture'}
-                        {category === 'southAfricaCulture' && '🇿🇦 SA Culture'}
-                        {category === 'africanMusic' && '🌍 African Music Industry'}
-                      </h4>
+              <div>
+                <h3 style={{ margin: '32px 0 16px', fontSize: '16px' }}>📰 Latest Headlines by Category</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                  {Object.entries(data.news).map(([category, articles]) => (
+                    <div key={category} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden' }}>
+                      <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(29,185,84,0.1)' }}>
+                        <h4 style={{ margin: 0, fontSize: '14px', color: '#1DB954' }}>
+                          {category === 'afrobeats' && '🎵 Afrobeats'}
+                          {category === 'amapiano' && '🇿🇦 Amapiano'}
+                          {category === 'nigeriaCulture' && '🇳🇬 Nigeria Culture'}
+                          {category === 'southAfricaCulture' && '🇿🇦 SA Culture'}
+                          {category === 'africanMusic' && '🌍 African Music Industry'}
+                        </h4>
+                      </div>
+                      <div style={{ padding: '12px 20px' }}>
+                        {articles.slice(0, 4).map((article, i) => (
+                          <a key={i} href={article.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}>
+                            <div style={{ fontSize: '13px', lineHeight: '1.4', marginBottom: '4px' }}>{article.title}</div>
+                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{article.source} • {article.date}</div>
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ padding: '12px 20px' }}>
-                      {articles.slice(0, 4).map((article, i) => (
-                        <a key={i} href={article.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}>
-                          <div style={{ fontSize: '13px', lineHeight: '1.4', marginBottom: '4px' }}>{article.title}</div>
-                          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{article.source} • {article.date}</div>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -228,28 +231,32 @@ export default function Dashboard() {
           <div>
             <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>🎭 Trending Topics by Region</h2>
             
-            {data?.trendingTopics && Object.entries(data.trendingTopics).map(([region, trends]) => (
-              <div key={region} style={{ marginBottom: '32px' }}>
-                <h3 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>
-                  {region === 'NIGERIA' && '🇳🇬'} {region === 'SOUTH_AFRICA' && '🇿🇦'} {region === 'GHANA' && '🇬🇭'} {region === 'KENYA' && '🇰🇪'} {region.replace('_', ' ')} - What's Trending
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
-                  {trends.slice(0, 6).map((trend, i) => (
-                    <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '14px', fontWeight: '600' }}>{trend.title}</span>
-                        <span style={{ padding: '4px 10px', background: 'rgba(244,67,54,0.2)', color: '#F44336', borderRadius: '100px', fontSize: '10px' }}>🔥 {trend.traffic}</span>
-                      </div>
-                      {trend.articles && trend.articles.length > 0 && (
-                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
-                          📰 {trend.articles[0]?.source}: {trend.articles[0]?.title?.substring(0, 50)}...
+            {data?.trendingTopics && Object.keys(data.trendingTopics).length > 0 ? (
+              Object.entries(data.trendingTopics).map(([region, trends]) => (
+                <div key={region} style={{ marginBottom: '32px' }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>
+                    {region === 'NIGERIA' && '🇳🇬 '}{region === 'SOUTH_AFRICA' && '🇿🇦 '}{region === 'GHANA' && '🇬🇭 '}{region === 'KENYA' && '🇰🇪 '}{region.replace('_', ' ')} - Whats Trending
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+                    {trends.slice(0, 6).map((trend, i) => (
+                      <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <span style={{ fontSize: '14px', fontWeight: '600' }}>{trend.title}</span>
+                          <span style={{ padding: '4px 10px', background: 'rgba(244,67,54,0.2)', color: '#F44336', borderRadius: '100px', fontSize: '10px' }}>🔥 {trend.traffic}</span>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {trend.articles && trend.articles.length > 0 && trend.articles[0] && (
+                          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+                            📰 {trend.articles[0].source}: {trend.articles[0].title ? trend.articles[0].title.substring(0, 50) : ''}...
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p style={{ color: 'rgba(255,255,255,0.5)' }}>Loading trending topics...</p>
+            )}
 
             <h3 style={{ margin: '32px 0 16px', fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>💔 Mood Playlists</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', marginBottom: '32px' }}>
@@ -261,28 +268,10 @@ export default function Dashboard() {
                 { mood: 'Wedding Season', emoji: '💒', color: '#E91E63', artists: 'Davido, Tiwa Savage, Flavour' },
                 { mood: 'Focus & Study', emoji: '📚', color: '#2196F3', artists: 'Amaarae, Odunsi, Lady Donli' }
               ].map((item, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px', borderLeft: `3px solid ${item.color}` }}>
+                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px', borderLeft: '3px solid ' + item.color }}>
                   <div style={{ fontSize: '28px', marginBottom: '8px' }}>{item.emoji}</div>
                   <h4 style={{ margin: '0 0 8px', fontSize: '15px' }}>{item.mood}</h4>
                   <div style={{ fontSize: '12px', color: '#1DB954' }}>{item.artists}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-            </div>
-            <h3 style={{ margin: '0 0 16px', fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>🎙️ Hot Topics</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-              {[
-                { topic: 'Nigeria vs South Africa Rivalry', heat: 95 },
-                { topic: 'IShowSpeed Africa Tour', heat: 88 },
-                { topic: 'Dating Culture in Africa', heat: 82 },
-                { topic: 'AFCON 2025 Culture', heat: 85 },
-                { topic: 'Mental Health Awareness', heat: 76 }
-              ].map((item, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '14px' }}>{item.topic}</span>
-                  <span style={{ padding: '4px 10px', background: item.heat > 85 ? 'rgba(244,67,54,0.2)' : 'rgba(255,152,0,0.2)', color: item.heat > 85 ? '#F44336' : '#FF9800', borderRadius: '100px', fontSize: '11px', fontWeight: '600' }}>🔥 {item.heat}</span>
                 </div>
               ))}
             </div>
@@ -302,7 +291,7 @@ export default function Dashboard() {
                 <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px' }}>
                   <h3 style={{ margin: '0 0 16px', fontSize: '15px' }}>{group.title}</h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {group.tags.map(tag => (
+                    {group.tags.map((tag) => (
                       <span key={tag} style={{ padding: '6px 12px', background: 'rgba(29,185,84,0.15)', borderRadius: '100px', fontSize: '12px', color: '#1DB954' }}>{tag}</span>
                     ))}
                   </div>
