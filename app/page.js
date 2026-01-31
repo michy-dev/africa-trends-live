@@ -188,8 +188,32 @@ export default function Dashboard() {
 
         {activeTab === 'culture' && (
           <div>
-            <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>🎭 Culture & Story Angles</h2>
-            <h3 style={{ margin: '0 0 16px', fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>💔 Mood Playlists</h3>
+            <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>🎭 Trending Topics by Region</h2>
+            
+            {data?.trendingTopics && Object.entries(data.trendingTopics).map(([region, trends]) => (
+              <div key={region} style={{ marginBottom: '32px' }}>
+                <h3 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>
+                  {region === 'NIGERIA' && '🇳🇬'} {region === 'SOUTH_AFRICA' && '🇿🇦'} {region === 'GHANA' && '🇬🇭'} {region === 'KENYA' && '🇰🇪'} {region.replace('_', ' ')} - What's Trending
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+                  {trends.slice(0, 6).map((trend, i) => (
+                    <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: '600' }}>{trend.title}</span>
+                        <span style={{ padding: '4px 10px', background: 'rgba(244,67,54,0.2)', color: '#F44336', borderRadius: '100px', fontSize: '10px' }}>🔥 {trend.traffic}</span>
+                      </div>
+                      {trend.articles && trend.articles.length > 0 && (
+                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+                          📰 {trend.articles[0]?.source}: {trend.articles[0]?.title?.substring(0, 50)}...
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <h3 style={{ margin: '32px 0 16px', fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>💔 Mood Playlists</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', marginBottom: '32px' }}>
               {[
                 { mood: 'Heartbreak Season', emoji: '💔', color: '#E91E63', artists: 'Omah Lay, Oxlade, Ayra Starr' },
@@ -205,6 +229,9 @@ export default function Dashboard() {
                   <div style={{ fontSize: '12px', color: '#1DB954' }}>{item.artists}</div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
             </div>
             <h3 style={{ margin: '0 0 16px', fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>🎙️ Hot Topics</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
