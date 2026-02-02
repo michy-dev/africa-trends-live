@@ -112,7 +112,7 @@ export default function Dashboard() {
                           <span style={{ width: '22px', height: '22px', borderRadius: '50%', background: i < 3 ? ['#FFD700','#C0C0C0','#CD7F32'][i] : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: i < 3 ? '#000' : '#fff', marginRight: '10px' }}>{i+1}</span>
                           <img src={getArtistImage(artist.name)} alt={artist.name} style={{ width: '36px', height: '36px', borderRadius: '50%', marginRight: '12px', objectFit: 'cover' }} />
                           <span style={{ flex: 1, fontSize: '14px', fontWeight: '500' }}>{artist.name}</span>
-                          <span style={{ fontSize: '12px', color: i === 0 ? '#1DB954' : 'rgba(255,255,255,0.5)', fontWeight: '600' }}>{artist.score}</span>
+                          <span style={{ fontSize: '12px', color: i === 0 ? '#1DB954' : 'rgba(255,255,255,0.5)', fontWeight: '600' }}>{artist.score}%</span>
                         </div>
                       );
                     })}

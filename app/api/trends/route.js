@@ -59,7 +59,7 @@ async function getGoogleTrends(artists, geo) {
 }
 
 async function getDailyTrends(geo) {
-  const queries = {
+  var queries = {
     NG: 'Nigeria trending news today',
     ZA: 'South Africa trending news today',
     GH: 'Ghana trending news today',
@@ -67,26 +67,32 @@ async function getDailyTrends(geo) {
   };
   
   try {
-    const query = queries[geo] || 'Africa news today';
-    const res = await fetch(
-      `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en&gl=${geo}&ceid=${geo}:en`,
+    var sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    var query = queries[geo] || 'Africa news today';
+    var res = await fetch(
+      'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '+when:6m&hl=en&gl=' + geo + '&ceid=' + geo + ':en',
       { headers: { 'User-Agent': 'Mozilla/5.0' } }
     );
-    const xml = await res.text();
-    const items = [];
-    const regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<\/item>/g;
-    let match;
+    var xml = await res.text();
+    var items = [];
+    var regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
+    var match;
     while ((match = regex.exec(xml)) && items.length < 8) {
-      const title = match[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/ - .*$/, '').trim();
-      items.push({
-        title: title,
-        traffic: '🔥 Trending',
-        articles: [{
+      var articleDate = new Date(match[4]);
+      if (articleDate >= sixMonthsAgo) {
+        var title = match[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/ - .*$/, '').trim();
+        items.push({
           title: title,
-          source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
-          url: match[2].trim()
-        }]
-      });
+          traffic: '🔥 Trending',
+          articles: [{
+            title: title,
+            source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+            url: match[2].trim()
+          }]
+        });
+      }
     }
     return items;
   } catch (e) {
@@ -96,52 +102,63 @@ async function getDailyTrends(geo) {
 
 async function getCityTrends(city, country) {
   try {
-    const query = `${city} music entertainment news`;
-    const res = await fetch(
-      `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en&gl=${country}&ceid=${country}:en`,
+    var sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    var query = city + ' music entertainment news';
+    var res = await fetch(
+      'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '+when:6m&hl=en&gl=' + country + '&ceid=' + country + ':en',
       { headers: { 'User-Agent': 'Mozilla/5.0' } }
     );
-    const xml = await res.text();
-    const items = [];
-    const regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<\/item>/g;
-    let match;
+    var xml = await res.text();
+    var items = [];
+    var regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
+    var match;
     while ((match = regex.exec(xml)) && items.length < 5) {
-      items.push({
-        title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/ - .*$/, '').trim(),
-        source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
-        url: match[2].trim()
-      });
+      var articleDate = new Date(match[4]);
+      if (articleDate >= sixMonthsAgo) {
+        items.push({
+          title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/ - .*$/, '').trim(),
+          source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+          url: match[2].trim(),
+          date: articleDate.toLocaleDateString()
+        });
+      }
     }
     return items;
   } catch (e) {
     return [];
   }
 }
-
 async function getNews(query) {
   try {
-    const res = await fetch(
-      `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-NG&gl=NG&ceid=NG:en`,
+    var sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    var res = await fetch(
+      'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '+when:6m&hl=en-NG&gl=NG&ceid=NG:en',
       { headers: { 'User-Agent': 'Mozilla/5.0' } }
     );
-    const xml = await res.text();
-    const items = [];
-    const regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
-    let match;
+    var xml = await res.text();
+    var items = [];
+    var regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
+    var match;
     while ((match = regex.exec(xml)) && items.length < 5) {
-      items.push({
-        title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
-        url: match[2].trim(),
-        source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
-        date: new Date(match[4]).toLocaleDateString()
-      });
+      var articleDate = new Date(match[4]);
+      if (articleDate >= sixMonthsAgo) {
+        items.push({
+          title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+          url: match[2].trim(),
+          source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+          date: articleDate.toLocaleDateString()
+        });
+      }
     }
     return items;
   } catch (e) {
     return [];
   }
 }
-
 async function getSpotifyCharts(country, code) {
   try {
     const res = await fetch(`https://kworb.net/spotify/country/${code}_daily.html`, {
