@@ -5,27 +5,27 @@ export const revalidate = 3600;
 
 async function getGoogleTrends(artists, geo) {
   try {
-    const googleTrends = require('google-trends-api');
-    const result = await googleTrends.interestOverTime({
+    var googleTrends = require('google-trends-api');
+    var result = await googleTrends.interestOverTime({
       keyword: artists,
       geo: geo,
       startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
     });
-    const data = JSON.parse(result);
-    const scores = {};
-    const recentScores = {};
-    const oldScores = {};
-    artists.forEach((a) => {
+    var data = JSON.parse(result);
+    var scores = {};
+    var recentScores = {};
+    var oldScores = {};
+    artists.forEach(function(a) {
       scores[a] = 0;
       recentScores[a] = 0;
       oldScores[a] = 0;
     });
     
-    const timeline = data.default.timelineData;
-    const midpoint = Math.floor(timeline.length / 2);
+    var timeline = data.default.timelineData;
+    var midpoint = Math.floor(timeline.length / 2);
     
-    timeline.forEach((point, idx) => {
-      point.value.forEach((v, i) => {
+    timeline.forEach(function(point, idx) {
+      point.value.forEach(function(v, i) {
         scores[artists[i]] += v;
         if (idx >= midpoint) {
           recentScores[artists[i]] += v;
@@ -35,48 +35,107 @@ async function getGoogleTrends(artists, geo) {
       });
     });
     
-    const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-    const max = sorted[0][1] || 1;
+    var sorted = Object.entries(scores).sort(function(a, b) { return b[1] - a[1]; });
+    var max = sorted[0][1] || 1;
     
     return {
-      rankings: sorted.map(([name, score]) => ({
-        name,
-        score: Math.round((score / max) * 100)
-      })),
-      changes: artists.map(name => {
-        const recent = recentScores[name] || 1;
-        const old = oldScores[name] || 1;
-        const change = Math.round(((recent - old) / old) * 100);
-        return { name, change };
+      rankings: sorted.map(function(entry) {
+        return { name: entry[0], score: Math.round((entry[1] / max) * 100) };
+      }),
+      changes: artists.map(function(name) {
+        var recent = recentScores[name] || 1;
+        var old = oldScores[name] || 1;
+        var change = Math.round(((recent - old) / old) * 100);
+        return { name: name, change: change };
       })
     };
   } catch (e) {
     return {
-      rankings: artists.map(name => ({ name, score: 0 })),
-      changes: artists.map(name => ({ name, change: 0 }))
+      rankings: artists.map(function(name) { return { name: name, score: 0 }; }),
+      changes: artists.map(function(name) { return { name: name, change: 0 }; })
     };
+  }
+}
+
+async function getNews(query) {
+  try {
+    var res = await fetch(
+      'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en-NG&gl=NG&ceid=NG:en',
+      { headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    var xml = await res.text();
+    var items = [];
+    var sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    var regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
+    var match;
+    while ((match = regex.exec(xml)) && items.length < 5) {
+      var articleDate = new Date(match[4]);
+      if (articleDate >= sixMonthsAgo) {
+        items.push({
+          title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+          url: match[2].trim(),
+          source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+          date: articleDate.toLocaleDateString()
+        });
+      }
+    }
+    return items;
+  } catch (e) {
+    return [];
+  }
+}
+
+async function getCityTrends(city, country) {
+  try {
+    var query = city + ' music entertainment';
+    var res = await fetch(
+      'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en&gl=' + country + '&ceid=' + country + ':en',
+      { headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    var xml = await res.text();
+    var items = [];
+    var sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    var regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
+    var match;
+    while ((match = regex.exec(xml)) && items.length < 5) {
+      var articleDate = new Date(match[4]);
+      if (articleDate >= sixMonthsAgo) {
+        items.push({
+          title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/ - .*$/, '').trim(),
+          source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+          url: match[2].trim()
+        });
+      }
+    }
+    return items;
+  } catch (e) {
+    return [];
   }
 }
 
 async function getDailyTrends(geo) {
   var queries = {
-    NG: 'Nigeria trending news today',
-    ZA: 'South Africa trending news today',
-    GH: 'Ghana trending news today',
-    KE: 'Kenya trending news today'
+    NG: 'Nigeria trending news',
+    ZA: 'South Africa trending news',
+    GH: 'Ghana trending news',
+    KE: 'Kenya trending news'
   };
   
   try {
-    var sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    
-    var query = queries[geo] || 'Africa news today';
+    var query = queries[geo] || 'Africa news';
     var res = await fetch(
-      'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '+when:6m&hl=en&gl=' + geo + '&ceid=' + geo + ':en',
+      'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '&hl=en&gl=' + geo + '&ceid=' + geo + ':en',
       { headers: { 'User-Agent': 'Mozilla/5.0' } }
     );
     var xml = await res.text();
     var items = [];
+    var sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
     var regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
     var match;
     while ((match = regex.exec(xml)) && items.length < 8) {
@@ -100,75 +159,16 @@ async function getDailyTrends(geo) {
   }
 }
 
-async function getCityTrends(city, country) {
-  try {
-    var sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    
-    var query = city + ' music entertainment news';
-    var res = await fetch(
-      'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '+when:6m&hl=en&gl=' + country + '&ceid=' + country + ':en',
-      { headers: { 'User-Agent': 'Mozilla/5.0' } }
-    );
-    var xml = await res.text();
-    var items = [];
-    var regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
-    var match;
-    while ((match = regex.exec(xml)) && items.length < 5) {
-      var articleDate = new Date(match[4]);
-      if (articleDate >= sixMonthsAgo) {
-        items.push({
-          title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/ - .*$/, '').trim(),
-          source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
-          url: match[2].trim(),
-          date: articleDate.toLocaleDateString()
-        });
-      }
-    }
-    return items;
-  } catch (e) {
-    return [];
-  }
-}
-async function getNews(query) {
-  try {
-    var sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    
-    var res = await fetch(
-      'https://news.google.com/rss/search?q=' + encodeURIComponent(query) + '+when:6m&hl=en-NG&gl=NG&ceid=NG:en',
-      { headers: { 'User-Agent': 'Mozilla/5.0' } }
-    );
-    var xml = await res.text();
-    var items = [];
-    var regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<\/item>/g;
-    var match;
-    while ((match = regex.exec(xml)) && items.length < 5) {
-      var articleDate = new Date(match[4]);
-      if (articleDate >= sixMonthsAgo) {
-        items.push({
-          title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
-          url: match[2].trim(),
-          source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
-          date: articleDate.toLocaleDateString()
-        });
-      }
-    }
-    return items;
-  } catch (e) {
-    return [];
-  }
-}
 async function getSpotifyCharts(country, code) {
   try {
-    const res = await fetch(`https://kworb.net/spotify/country/${code}_daily.html`, {
+    var res = await fetch('https://kworb.net/spotify/country/' + code + '_daily.html', {
       headers: { 'User-Agent': 'Mozilla/5.0' }
     });
-    const html = await res.text();
-    const songs = [];
-    const regex = /<td>(\d+)<\/td><td><a[^>]*>([^<]+)<\/a><\/td><td><a[^>]*>([^<]+)<\/a><\/td><td[^>]*>([\d,]+)<\/td>/g;
-    let match;
-    let count = 0;
+    var html = await res.text();
+    var songs = [];
+    var regex = /<td>(\d+)<\/td><td><a[^>]*>([^<]+)<\/a><\/td><td><a[^>]*>([^<]+)<\/a><\/td><td[^>]*>([\d,]+)<\/td>/g;
+    var match;
+    var count = 0;
     while ((match = regex.exec(html)) && count < 5) {
       songs.push({
         title: match[2].trim(),
@@ -193,7 +193,7 @@ function formatStreams(num) {
 }
 
 function getBackupSpotifyData(country) {
-  const backup = {
+  var backup = {
     '🇳🇬 Nigeria': [
       { title: 'Jogodo', artist: 'Wizkid & Asake', streams: '607K' },
       { title: 'Turbulence', artist: 'Wizkid & Asake', streams: '493K' },
@@ -227,53 +227,49 @@ function getBackupSpotifyData(country) {
 }
 
 export async function GET() {
-  // All artists to track
-  const allArtists = [
-    'Wizkid', 'Burna Boy', 'Davido', 'Asake', 'Rema', 'Ayra Starr', 'Omah Lay', 'CKay',
-    'Tyla', 'Kabza De Small', 'Nasty C', 'Focalistic',
-    'Black Sherif', 'Sarkodie', 'Stonebwoy', 'King Promise',
-    'Sauti Sol', 'Zuchu', 'Diamond Platnumz', 'Nviiri'
-  ];
-
-  const regions = {
+  var regions = {
     NIGERIA: { geo: 'NG', artists: ['Wizkid', 'Burna Boy', 'Davido', 'Asake', 'Rema'] },
     SOUTH_AFRICA: { geo: 'ZA', artists: ['Tyla', 'Kabza De Small', 'Nasty C', 'Focalistic'] },
     GHANA: { geo: 'GH', artists: ['Black Sherif', 'Sarkodie', 'Stonebwoy', 'King Promise'] },
     KENYA: { geo: 'KE', artists: ['Sauti Sol', 'Zuchu', 'Diamond Platnumz', 'Nviiri'] }
   };
 
-  // Get rankings and calculate rising artists
-  const rankings = {};
-  const allChanges = [];
+  var rankings = {};
+  var allChanges = [];
   
-  for (const [name, config] of Object.entries(regions)) {
-    const result = await getGoogleTrends(config.artists, config.geo);
-    rankings[name] = result.rankings;
-    allChanges.push(...result.changes.map(c => ({ ...c, region: name })));
+  for (var regionName in regions) {
+    var config = regions[regionName];
+    var result = await getGoogleTrends(config.artists, config.geo);
+    rankings[regionName] = result.rankings;
+    result.changes.forEach(function(c) {
+      allChanges.push({ name: c.name, change: c.change, region: regionName });
+    });
   }
 
-  // Get top rising artists (biggest positive change)
-  const rising = allChanges
-    .filter(a => a.change > 0)
-    .sort((a, b) => b.change - a.change)
+  var rising = allChanges
+    .filter(function(a) { return a.change > 0; })
+    .sort(function(a, b) { return b.change - a.change; })
     .slice(0, 6)
-    .map(a => ({
-      name: a.name,
-      country: regions[a.region]?.geo === 'NG' ? '🇳🇬' : 
-               regions[a.region]?.geo === 'ZA' ? '🇿🇦' : 
-               regions[a.region]?.geo === 'GH' ? '🇬🇭' : '🇰🇪',
-      change: `+${a.change}%`,
-      reason: `Trending in ${a.region.replace('_', ' ')}`
-    }));
+    .map(function(a) {
+      var flag = '🌍';
+      if (regions[a.region].geo === 'NG') flag = '🇳🇬';
+      if (regions[a.region].geo === 'ZA') flag = '🇿🇦';
+      if (regions[a.region].geo === 'GH') flag = '🇬🇭';
+      if (regions[a.region].geo === 'KE') flag = '🇰🇪';
+      return {
+        name: a.name,
+        country: flag,
+        change: '+' + a.change + '%',
+        reason: 'Trending in ' + a.region.replace('_', ' ')
+      };
+    });
 
-  // Get trending topics
-  const trendingTopics = {};
-  for (const [name, config] of Object.entries(regions)) {
-    trendingTopics[name] = await getDailyTrends(config.geo);
+  var trendingTopics = {};
+  for (var regionName in regions) {
+    trendingTopics[regionName] = await getDailyTrends(regions[regionName].geo);
   }
 
-  // Get city trends
-  const cities = [
+  var cities = [
     { name: 'Lagos', country: 'NG' },
     { name: 'Port Harcourt', country: 'NG' },
     { name: 'Ibadan', country: 'NG' },
@@ -290,13 +286,13 @@ export async function GET() {
     { name: 'Kumasi', country: 'GH' }
   ];
 
-  const cityTrends = {};
-  for (const city of cities) {
+  var cityTrends = {};
+  for (var i = 0; i < cities.length; i++) {
+    var city = cities[i];
     cityTrends[city.name] = await getCityTrends(city.name, city.country);
   }
 
-  // Get news
-  const news = {
+  var news = {
     afrobeats: await getNews('Afrobeats music'),
     amapiano: await getNews('Amapiano music South Africa'),
     nigeriaCulture: await getNews('Nigeria entertainment culture'),
@@ -304,23 +300,22 @@ export async function GET() {
     africanMusic: await getNews('African music industry')
   };
 
-  // Spotify charts
-  const spotifyCountries = [
+  var spotifyCountries = [
     { name: '🇳🇬 Nigeria', code: 'ng' },
     { name: '🇿🇦 South Africa', code: 'za' },
     { name: '🇰🇪 Kenya', code: 'ke' },
     { name: '🇬🇭 Ghana', code: 'gh' }
   ];
 
-  const spotify = {};
-  for (const country of spotifyCountries) {
+  var spotify = {};
+  for (var i = 0; i < spotifyCountries.length; i++) {
+    var country = spotifyCountries[i];
     spotify[country.name] = await getSpotifyCharts(country.name, country.code);
   }
 
-  // Generate stories from news
-  const stories = [];
+  var stories = [];
   
-  if (news.afrobeats.length > 0) {
+  if (news.afrobeats && news.afrobeats.length > 0) {
     stories.push({
       type: 'Afrobeats News',
       hook: news.afrobeats[0].title,
@@ -332,7 +327,7 @@ export async function GET() {
     });
   }
 
-  if (news.amapiano.length > 0) {
+  if (news.amapiano && news.amapiano.length > 0) {
     stories.push({
       type: 'Amapiano News',
       hook: news.amapiano[0].title,
@@ -344,7 +339,7 @@ export async function GET() {
     });
   }
 
-  if (news.nigeriaCulture.length > 0) {
+  if (news.nigeriaCulture && news.nigeriaCulture.length > 0) {
     stories.push({
       type: 'Nigeria Culture',
       hook: news.nigeriaCulture[0].title,
@@ -356,7 +351,7 @@ export async function GET() {
     });
   }
 
-  if (news.southAfricaCulture.length > 0) {
+  if (news.southAfricaCulture && news.southAfricaCulture.length > 0) {
     stories.push({
       type: 'South Africa Culture',
       hook: news.southAfricaCulture[0].title,
@@ -368,7 +363,7 @@ export async function GET() {
     });
   }
 
-  if (news.africanMusic.length > 0) {
+  if (news.africanMusic && news.africanMusic.length > 0) {
     stories.push({
       type: 'African Music Industry',
       hook: news.africanMusic[0].title,
@@ -380,17 +375,17 @@ export async function GET() {
     });
   }
 
-  const data = {
-    rankings,
-    trendingTopics,
-    cityTrends,
-    news,
+  var data = {
+    rankings: rankings,
+    trendingTopics: trendingTopics,
+    cityTrends: cityTrends,
+    news: news,
     rising: rising.length > 0 ? rising : [
       { name: 'Asake', country: '🇳🇬', change: '+45%', reason: 'New album buzz' },
       { name: 'Tyla', country: '🇿🇦', change: '+38%', reason: 'Grammy momentum' },
       { name: 'Rema', country: '🇳🇬', change: '+32%', reason: 'Tour announcement' }
     ],
-    stories,
+    stories: stories,
     audience: {
       cities: [
         { name: 'Lagos', flag: '🇳🇬', topArtist: 'Wizkid', searches: '2.4M' },
@@ -409,7 +404,7 @@ export async function GET() {
         { name: 'Kumasi', flag: '🇬🇭', topArtist: 'Sarkodie', searches: '380K' }
       ]
     },
-    spotify,
+    spotify: spotify,
     updatedAt: new Date().toISOString()
   };
 
