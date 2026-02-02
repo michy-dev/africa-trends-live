@@ -51,32 +51,9 @@ export default function Dashboard() {
     return '🌍';
   };
 
-  const artistImages = {
-    'Wizkid': 'https://i.scdn.co/image/ab6761610000e5eb2cfc4d953894d38d81d8d290',
-    'Burna Boy': 'https://i.scdn.co/image/ab6761610000e5eb7d3b4a78d35228f7e9fd42cb',
-    'Davido': 'https://i.scdn.co/image/ab6761610000e5ebce9dfe323c89e78e51568c61',
-    'Asake': 'https://i.scdn.co/image/ab6761610000e5eb7a37f899b89b4db960479a09',
-    'Rema': 'https://i.scdn.co/image/ab6761610000e5ebb252c986a7fa10d0815abdb9',
-    'Tyla': 'https://i.scdn.co/image/ab6761610000e5eb58f569dbfc7a5e9023674dec',
-    'Kabza De Small': 'https://i.scdn.co/image/ab6761610000e5eb0c6952518938926a5db73ea4',
-    'Nasty C': 'https://i.scdn.co/image/ab6761610000e5eb0c52a8d9283eab2e83279367',
-    'Focalistic': 'https://i.scdn.co/image/ab6761610000e5eb69c64822bc3863e9e0ed72ee',
-    'Black Sherif': 'https://i.scdn.co/image/ab6761610000e5eb6e06456e0a7ab666eb3d6d1a',
-    'Sarkodie': 'https://i.scdn.co/image/ab6761610000e5eb065ec2ec3fffcbc2ad84e832',
-    'Stonebwoy': 'https://i.scdn.co/image/ab6761610000e5eb57d1de43b56d1b5a4a7a14f4',
-    'King Promise': 'https://i.scdn.co/image/ab6761610000e5eb5dba12c9ff22651186a4825b',
-    'Sauti Sol': 'https://i.scdn.co/image/ab6761610000e5eb3ea6a75a1c5e8ae1f41a5f35',
-    'Zuchu': 'https://i.scdn.co/image/ab6761610000e5eb4c67c61727f51254d997833f',
-    'Diamond Platnumz': 'https://i.scdn.co/image/ab6761610000e5eb7729c57a77a8b7978c8a06f5',
-    'Nviiri': 'https://i.scdn.co/image/ab6761610000e5ebcd71847cb57e8621d0693d26'
+ const getArtistImage = (name) => {
+    return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=1DB954&color=fff&size=128&bold=true';
   };
-
-  const getArtistImage = (name) => {
-    return artistImages[name] || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=1DB954&color=fff&size=128';
-  };
-
-  if (loading) {
-    return (
       <div style={{ minHeight: '100vh', background: '#121212', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🌍</div>
