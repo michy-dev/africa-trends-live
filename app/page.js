@@ -45,9 +45,9 @@ export default function Dashboard() {
 
   var getCityFlag = function(city) {
     if (city === 'Lagos' || city === 'Port Harcourt' || city === 'Ibadan' || city === 'Abuja' || city === 'Benin City') return '🇳🇬';
-    if (city === 'Johannesburg') return '🇿🇦';
-    if (city === 'Nairobi') return '🇰🇪';
-    if (city === 'Accra') return '🇬🇭';
+    if (city === 'Johannesburg' || city === 'Cape Town' || city === 'Durban' || city === 'Pretoria') return '🇿🇦';
+    if (city === 'Nairobi' || city === 'Mombasa' || city === 'Kisumu') return '🇰🇪';
+    if (city === 'Accra' || city === 'Kumasi') return '🇬🇭';
     return '🌍';
   };
 
@@ -235,7 +235,7 @@ export default function Dashboard() {
             <h2 style={{ margin: '0 0 8px', fontSize: '18px' }}>👥 Audience Insights by City</h2>
             <p style={{ margin: '0 0 24px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Select a city to see live music trends and news</p>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
-              {['Lagos', 'Port Harcourt', 'Ibadan', 'Abuja', 'Benin City', 'Johannesburg', 'Nairobi', 'Accra'].map(function(city) {
+              {['Lagos', 'Port Harcourt', 'Ibadan', 'Abuja', 'Benin City', 'Johannesburg', 'Cape Town', 'Durban', 'Pretoria', 'Nairobi', 'Mombasa', 'Kisumu', 'Accra', 'Kumasi'].map(function(city) {
                 return (
                   <button key={city} onClick={function() { setSelectedCity(city); }} style={{ padding: '10px 20px', background: selectedCity === city ? '#1DB954' : 'rgba(255,255,255,0.05)', border: selectedCity === city ? '1px solid #1DB954' : '1px solid rgba(255,255,255,0.1)', borderRadius: '100px', color: selectedCity === city ? '#000' : '#fff', fontSize: '13px', fontWeight: selectedCity === city ? '600' : '400', cursor: 'pointer' }}>{getCityFlag(city)} {city}</button>
                 );
@@ -275,15 +275,19 @@ export default function Dashboard() {
                   )}
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
-                  <h4 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>🔍 Popular Searches</h4>
-                  {[selectedCity + ' concerts 2026', selectedCity + ' nightlife', 'Afrobeats ' + selectedCity, selectedCity + ' music events', 'Artists from ' + selectedCity].map(function(search, i) {
-                    return (
-                      <a key={i} href={'https://www.google.com/search?q=' + encodeURIComponent(search)} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}>
-                        <span style={{ fontSize: '13px' }}>{search}</span>
-                        <span style={{ fontSize: '11px', color: '#1DB954' }}>→</span>
-                      </a>
-                    );
-                  })}
+                  <h4 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>🔍 Trending Searches in {selectedCity}</h4>
+                  {data && data.cityTrends && data.cityTrends[selectedCity] && data.cityTrends[selectedCity].length > 0 ? (
+                    data.cityTrends[selectedCity].slice(0, 5).map(function(item, i) {
+                      return (
+                        <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}>
+                          <span style={{ fontSize: '13px' }}>{item.title}</span>
+                          <span style={{ fontSize: '11px', color: '#1DB954' }}>→</span>
+                        </a>
+                      );
+                    })
+                  ) : (
+                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Loading searches...</p>
+                  )}
                 </div>
               </div>
             )}

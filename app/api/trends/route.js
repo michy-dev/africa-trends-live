@@ -263,8 +263,14 @@ export async function GET() {
     { name: 'Abuja', country: 'NG' },
     { name: 'Benin City', country: 'NG' },
     { name: 'Johannesburg', country: 'ZA' },
+    { name: 'Cape Town', country: 'ZA' },
+    { name: 'Durban', country: 'ZA' },
+    { name: 'Pretoria', country: 'ZA' },
     { name: 'Nairobi', country: 'KE' },
-    { name: 'Accra', country: 'GH' }
+    { name: 'Mombasa', country: 'KE' },
+    { name: 'Kisumu', country: 'KE' },
+    { name: 'Accra', country: 'GH' },
+    { name: 'Kumasi', country: 'GH' }
   ];
 
   const cityTrends = {};
@@ -376,8 +382,14 @@ export async function GET() {
         { name: 'Abuja', flag: '🇳🇬', topArtist: 'Davido', searches: '980K' },
         { name: 'Benin City', flag: '🇳🇬', topArtist: 'Rema', searches: '450K' },
         { name: 'Johannesburg', flag: '🇿🇦', topArtist: 'Kabza De Small', searches: '1.8M' },
+        { name: 'Cape Town', flag: '🇿🇦', topArtist: 'Tyla', searches: '920K' },
+        { name: 'Durban', flag: '🇿🇦', topArtist: 'Nasty C', searches: '680K' },
+        { name: 'Pretoria', flag: '🇿🇦', topArtist: 'Focalistic', searches: '540K' },
         { name: 'Nairobi', flag: '🇰🇪', topArtist: 'Sauti Sol', searches: '890K' },
-        { name: 'Accra', flag: '🇬🇭', topArtist: 'Black Sherif', searches: '720K' }
+        { name: 'Mombasa', flag: '🇰🇪', topArtist: 'Zuchu', searches: '320K' },
+        { name: 'Kisumu', flag: '🇰🇪', topArtist: 'Diamond Platnumz', searches: '280K' },
+        { name: 'Accra', flag: '🇬🇭', topArtist: 'Black Sherif', searches: '720K' },
+        { name: 'Kumasi', flag: '🇬🇭', topArtist: 'Sarkodie', searches: '380K' }
       ]
     },
     spotify,
