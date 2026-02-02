@@ -6,6 +6,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [activeTab, setActiveTab] = useState('rankings');
+  const [selectedArtist, setSelectedArtist] = useState(null);
+  const [selectedCity, setSelectedCity] = useState('Lagos');
 
   useEffect(() => {
     fetchData();
@@ -37,8 +39,40 @@ export default function Dashboard() {
   ];
 
   const getFlag = (region) => {
-    const flags = { NIGERIA: '🇳🇬', SOUTH_AFRICA: '🇿🇦', GHANA: '🇬🇭', KENYA: '🇰🇪', USA: '🇺🇸', UK: '🇬🇧' };
+    const flags = { NIGERIA: '🇳🇬', SOUTH_AFRICA: '🇿🇦', GHANA: '🇬🇭', KENYA: '🇰🇪' };
     return flags[region] || '🌍';
+  };
+
+  const getCityFlag = (city) => {
+    if (['Lagos', 'Port Harcourt', 'Ibadan', 'Abuja', 'Benin City'].includes(city)) return '🇳🇬';
+    if (city === 'Johannesburg') return '🇿🇦';
+    if (city === 'Nairobi') return '🇰🇪';
+    if (city === 'Accra') return '🇬🇭';
+    return '🌍';
+  };
+
+  const artistImages = {
+    'Wizkid': 'https://i.scdn.co/image/ab6761610000e5eb2cfc4d953894d38d81d8d290',
+    'Burna Boy': 'https://i.scdn.co/image/ab6761610000e5eb7d3b4a78d35228f7e9fd42cb',
+    'Davido': 'https://i.scdn.co/image/ab6761610000e5ebce9dfe323c89e78e51568c61',
+    'Asake': 'https://i.scdn.co/image/ab6761610000e5eb7a37f899b89b4db960479a09',
+    'Rema': 'https://i.scdn.co/image/ab6761610000e5ebb252c986a7fa10d0815abdb9',
+    'Tyla': 'https://i.scdn.co/image/ab6761610000e5eb58f569dbfc7a5e9023674dec',
+    'Kabza De Small': 'https://i.scdn.co/image/ab6761610000e5eb0c6952518938926a5db73ea4',
+    'Nasty C': 'https://i.scdn.co/image/ab6761610000e5eb0c52a8d9283eab2e83279367',
+    'Focalistic': 'https://i.scdn.co/image/ab6761610000e5eb69c64822bc3863e9e0ed72ee',
+    'Black Sherif': 'https://i.scdn.co/image/ab6761610000e5eb6e06456e0a7ab666eb3d6d1a',
+    'Sarkodie': 'https://i.scdn.co/image/ab6761610000e5eb065ec2ec3fffcbc2ad84e832',
+    'Stonebwoy': 'https://i.scdn.co/image/ab6761610000e5eb57d1de43b56d1b5a4a7a14f4',
+    'King Promise': 'https://i.scdn.co/image/ab6761610000e5eb5dba12c9ff22651186a4825b',
+    'Sauti Sol': 'https://i.scdn.co/image/ab6761610000e5eb3ea6a75a1c5e8ae1f41a5f35',
+    'Zuchu': 'https://i.scdn.co/image/ab6761610000e5eb4c67c61727f51254d997833f',
+    'Diamond Platnumz': 'https://i.scdn.co/image/ab6761610000e5eb7729c57a77a8b7978c8a06f5',
+    'Nviiri': 'https://i.scdn.co/image/ab6761610000e5ebcd71847cb57e8621d0693d26'
+  };
+
+  const getArtistImage = (name) => {
+    return artistImages[name] || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=1DB954&color=fff&size=128';
   };
 
   if (loading) {
@@ -75,10 +109,12 @@ export default function Dashboard() {
       </div>
 
       <div style={{ padding: '32px' }}>
+        
         {activeTab === 'rankings' && data?.rankings && (
           <div>
             <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>📊 Google Trends Rankings</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+            <p style={{ margin: '0 0 24px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Click on any artist to see what is driving their searches</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
               {Object.entries(data.rankings).map(([region, artists]) => (
                 <div key={region} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
@@ -86,30 +122,59 @@ export default function Dashboard() {
                     <h3 style={{ margin: 0, fontSize: '15px' }}>{region.replace('_', ' ')}</h3>
                   </div>
                   {artists.map((artist, i) => (
-                    <div key={artist.name} style={{ display: 'flex', alignItems: 'center', padding: '8px 0', borderBottom: i < artists.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                    <div 
+                      key={artist.name} 
+                      onClick={() => setSelectedArtist(selectedArtist === artist.name ? null : artist.name)}
+                      style={{ display: 'flex', alignItems: 'center', padding: '10px', marginBottom: '8px', borderRadius: '8px', background: selectedArtist === artist.name ? 'rgba(29,185,84,0.15)' : 'transparent', border: selectedArtist === artist.name ? '1px solid rgba(29,185,84,0.3)' : '1px solid transparent', cursor: 'pointer' }}
+                    >
                       <span style={{ width: '22px', height: '22px', borderRadius: '50%', background: i < 3 ? ['#FFD700','#C0C0C0','#CD7F32'][i] : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: i < 3 ? '#000' : '#fff', marginRight: '10px' }}>{i+1}</span>
-                      <span style={{ flex: 1, fontSize: '13px' }}>{artist.name}</span>
-                      <span style={{ fontSize: '12px', color: i === 0 ? '#1DB954' : 'rgba(255,255,255,0.5)' }}>{artist.score}</span>
+                      <img src={getArtistImage(artist.name)} alt={artist.name} style={{ width: '36px', height: '36px', borderRadius: '50%', marginRight: '12px', objectFit: 'cover' }} />
+                      <span style={{ flex: 1, fontSize: '14px', fontWeight: '500' }}>{artist.name}</span>
+                      <span style={{ fontSize: '12px', color: i === 0 ? '#1DB954' : 'rgba(255,255,255,0.5)', fontWeight: '600' }}>{artist.score}</span>
                     </div>
                   ))}
                 </div>
               ))}
             </div>
+
+            {selectedArtist && (
+              <div style={{ marginTop: '32px', background: 'rgba(29,185,84,0.08)', border: '1px solid rgba(29,185,84,0.2)', borderRadius: '12px', padding: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                  <img src={getArtistImage(selectedArtist)} alt={selectedArtist} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover' }} />
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '20px' }}>{selectedArtist}</h3>
+                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>What is driving the conversation</p>
+                  </div>
+                  <button onClick={() => setSelectedArtist(null)} style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: '#fff', cursor: 'pointer', fontSize: '16px' }}>x</button>
+                </div>
+                <h4 style={{ margin: '0 0 12px', fontSize: '14px', color: '#1DB954' }}>🔥 Trending Searches</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
+                  {[selectedArtist + ' new song', selectedArtist + ' album 2026', selectedArtist + ' concert', selectedArtist + ' net worth', selectedArtist + ' latest news'].map((term, i) => (
+                    <a key={i} href={'https://trends.google.com/trends/explore?q=' + encodeURIComponent(term) + '&geo=NG'} target="_blank" rel="noopener noreferrer" style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: '100px', fontSize: '12px', color: '#fff', textDecoration: 'none' }}>{term}</a>
+                  ))}
+                </div>
+                <a href={'https://www.google.com/search?q=' + encodeURIComponent(selectedArtist + ' news')} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '8px', padding: '10px 20px', background: '#1DB954', color: '#000', borderRadius: '100px', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>See all {selectedArtist} news</a>
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'rising' && data?.rising && (
           <div>
             <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>🚀 Rising Artists</h2>
+            <p style={{ margin: '0 0 24px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Artists with biggest week-over-week growth in search interest</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
               {data.rising.map((artist, i) => (
                 <div key={i} style={{ background: 'linear-gradient(135deg, rgba(29,185,84,0.15) 0%, rgba(29,185,84,0.05) 100%)', border: '1px solid rgba(29,185,84,0.3)', borderRadius: '12px', padding: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <div>
-                      <span style={{ fontSize: '18px', fontWeight: '700' }}>{artist.name}</span>
-                      <span style={{ marginLeft: '8px' }}>{artist.country}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <img src={getArtistImage(artist.name)} alt={artist.name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <div>
+                        <span style={{ fontSize: '18px', fontWeight: '700' }}>{artist.name}</span>
+                        <span style={{ marginLeft: '8px' }}>{artist.country}</span>
+                      </div>
                     </div>
-                    <span style={{ padding: '6px 12px', background: '#1DB954', color: '#000', borderRadius: '100px', fontSize: '13px', fontWeight: '700' }}>{artist.change}</span>
+                    <span style={{ padding: '6px 12px', background: '#1DB954', color: '#000', borderRadius: '100px', fontSize: '13px', fontWeight: '700', height: 'fit-content' }}>{artist.change}</span>
                   </div>
                   <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>📈 {artist.reason}</p>
                 </div>
@@ -121,7 +186,6 @@ export default function Dashboard() {
         {activeTab === 'stories' && (
           <div>
             <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>✍️ Story Ideas from Latest News</h2>
-            
             {data?.stories && data.stories.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px', marginBottom: '32px' }}>
                 {data.stories.map((story, i) => (
@@ -131,26 +195,17 @@ export default function Dashboard() {
                       {story.date && <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{story.date}</span>}
                     </div>
                     <h4 style={{ margin: '0 0 8px', fontSize: '15px', lineHeight: '1.4' }}>{story.headline}</h4>
-                    {story.source && (
-                      <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
-                        Source: {story.source}
-                      </p>
-                    )}
+                    {story.source && <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Source: {story.source}</p>}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
                       {story.angles.map((angle, j) => (
                         <span key={j} style={{ padding: '4px 10px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', fontSize: '11px' }}>{angle}</span>
                       ))}
                     </div>
-                    {story.url && (
-                      <a href={story.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#1DB954', textDecoration: 'none' }}>
-                        Read full article →
-                      </a>
-                    )}
+                    {story.url && <a href={story.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#1DB954', textDecoration: 'none' }}>Read full article →</a>}
                   </div>
                 ))}
               </div>
             )}
-
             {data?.news && (
               <div>
                 <h3 style={{ margin: '32px 0 16px', fontSize: '16px' }}>📰 Latest Headlines by Category</h3>
@@ -159,11 +214,7 @@ export default function Dashboard() {
                     <div key={category} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden' }}>
                       <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(29,185,84,0.1)' }}>
                         <h4 style={{ margin: 0, fontSize: '14px', color: '#1DB954' }}>
-                          {category === 'afrobeats' && '🎵 Afrobeats'}
-                          {category === 'amapiano' && '🇿🇦 Amapiano'}
-                          {category === 'nigeriaCulture' && '🇳🇬 Nigeria Culture'}
-                          {category === 'southAfricaCulture' && '🇿🇦 SA Culture'}
-                          {category === 'africanMusic' && '🌍 African Music Industry'}
+                          {category === 'afrobeats' ? '🎵 Afrobeats' : category === 'amapiano' ? '🇿🇦 Amapiano' : category === 'nigeriaCulture' ? '🇳🇬 Nigeria Culture' : category === 'southAfricaCulture' ? '🇿🇦 SA Culture' : '🌍 African Music Industry'}
                         </h4>
                       </div>
                       <div style={{ padding: '12px 20px' }}>
@@ -186,66 +237,34 @@ export default function Dashboard() {
           <div>
             <h2 style={{ margin: '0 0 8px', fontSize: '18px' }}>👥 Audience Insights by City</h2>
             <p style={{ margin: '0 0 24px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Select a city to see live music trends and news</p>
-            
             <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
               {['Lagos', 'Port Harcourt', 'Ibadan', 'Abuja', 'Benin City', 'Johannesburg', 'Nairobi', 'Accra'].map((city) => (
-                <button
-                  key={city}
-                  onClick={() => setSelectedCity(city)}
-                  style={{
-                    padding: '10px 20px',
-                    background: selectedCity === city ? '#1DB954' : 'rgba(255,255,255,0.05)',
-                    border: '1px solid ' + (selectedCity === city ? '#1DB954' : 'rgba(255,255,255,0.1)'),
-                    borderRadius: '100px',
-                    color: selectedCity === city ? '#000' : '#fff',
-                    fontSize: '13px',
-                    fontWeight: selectedCity === city ? '600' : '400',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {city === 'Lagos' || city === 'Port Harcourt' || city === 'Ibadan' || city === 'Abuja' || city === 'Benin City' ? '🇳🇬' : city === 'Johannesburg' ? '🇿🇦' : city === 'Nairobi' ? '🇰🇪' : '🇬🇭'} {city}
-                </button>
+                <button key={city} onClick={() => setSelectedCity(city)} style={{ padding: '10px 20px', background: selectedCity === city ? '#1DB954' : 'rgba(255,255,255,0.05)', border: selectedCity === city ? '1px solid #1DB954' : '1px solid rgba(255,255,255,0.1)', borderRadius: '100px', color: selectedCity === city ? '#000' : '#fff', fontSize: '13px', fontWeight: selectedCity === city ? '600' : '400', cursor: 'pointer' }}>{getCityFlag(city)} {city}</button>
               ))}
             </div>
-
             {selectedCity && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                    <span style={{ fontSize: '36px' }}>
-                      {selectedCity === 'Lagos' || selectedCity === 'Port Harcourt' || selectedCity === 'Ibadan' || selectedCity === 'Abuja' || selectedCity === 'Benin City' ? '🇳🇬' : selectedCity === 'Johannesburg' ? '🇿🇦' : selectedCity === 'Nairobi' ? '🇰🇪' : '🇬🇭'}
-                    </span>
+                    <span style={{ fontSize: '36px' }}>{getCityFlag(selectedCity)}</span>
                     <div>
                       <h3 style={{ margin: 0, fontSize: '20px' }}>{selectedCity}</h3>
-                      <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Live music & entertainment trends</p>
+                      <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Live music and entertainment trends</p>
                     </div>
                   </div>
                   <div style={{ padding: '16px', background: 'rgba(29,185,84,0.1)', borderRadius: '8px' }}>
                     <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Top Artist</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <img 
-                        src={getArtistImage(data?.audience?.cities?.find(c => c.name === selectedCity)?.topArtist || 'Wizkid')} 
-                        alt="Top Artist"
-                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                      />
-                      <span style={{ fontSize: '18px', fontWeight: '600', color: '#1DB954' }}>
-                        {data?.audience?.cities?.find(c => c.name === selectedCity)?.topArtist || 'Loading...'}
-                      </span>
+                      <img src={getArtistImage(data?.audience?.cities?.find(c => c.name === selectedCity)?.topArtist || 'Wizkid')} alt="Top Artist" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <span style={{ fontSize: '18px', fontWeight: '600', color: '#1DB954' }}>{data?.audience?.cities?.find(c => c.name === selectedCity)?.topArtist || 'Loading...'}</span>
                     </div>
                   </div>
                 </div>
-
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
                   <h4 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>📰 Live News in {selectedCity}</h4>
                   {data?.cityTrends && data.cityTrends[selectedCity] && data.cityTrends[selectedCity].length > 0 ? (
                     data.cityTrends[selectedCity].map((item, i) => (
-                      <a 
-                        key={i} 
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ display: 'block', padding: '10px 0', borderBottom: i < data.cityTrends[selectedCity].length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}
-                      >
+                      <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px 0', borderBottom: i < data.cityTrends[selectedCity].length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}>
                         <div style={{ fontSize: '13px', marginBottom: '4px' }}>{item.title}</div>
                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{item.source}</div>
                       </a>
@@ -254,23 +273,10 @@ export default function Dashboard() {
                     <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Loading news...</p>
                   )}
                 </div>
-
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
                   <h4 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>🔍 Popular Searches</h4>
-                  {[
-                    `${selectedCity} concerts 2026`,
-                    `${selectedCity} nightlife`,
-                    `Afrobeats ${selectedCity}`,
-                    `${selectedCity} music events`,
-                    `Artists from ${selectedCity}`
-                  ].map((search, i) => (
-                    
-                      key={i}
-                      href={`https://www.google.com/search?q=${encodeURIComponent(search)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}
-                    >
+                  {[selectedCity + ' concerts 2026', selectedCity + ' nightlife', 'Afrobeats ' + selectedCity, selectedCity + ' music events', 'Artists from ' + selectedCity].map((search, i) => (
+                    <a key={i} href={'https://www.google.com/search?q=' + encodeURIComponent(search)} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}>
                       <span style={{ fontSize: '13px' }}>{search}</span>
                       <span style={{ fontSize: '11px', color: '#1DB954' }}>→</span>
                     </a>
@@ -280,6 +286,7 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
         {activeTab === 'spotify' && data?.spotify && (
           <div>
             <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>💚 Spotify Charts</h2>
@@ -310,43 +317,37 @@ export default function Dashboard() {
         {activeTab === 'culture' && (
           <div>
             <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>🎭 Trending Topics by Region</h2>
-            
-            {data?.trendingTopics && Object.keys(data.trendingTopics).length > 0 ? (
+            {data?.trendingTopics && Object.keys(data.trendingTopics).length > 0 && Object.values(data.trendingTopics).some(arr => arr.length > 0) ? (
               Object.entries(data.trendingTopics).map(([region, trends]) => (
-                <div key={region} style={{ marginBottom: '32px' }}>
-                  <h3 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>
-                    {region === 'NIGERIA' && '🇳🇬 '}{region === 'SOUTH_AFRICA' && '🇿🇦 '}{region === 'GHANA' && '🇬🇭 '}{region === 'KENYA' && '🇰🇪 '}{region.replace('_', ' ')} - Whats Trending
-                  </h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
-                    {trends.slice(0, 6).map((trend, i) => (
-                      <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '14px', fontWeight: '600' }}>{trend.title}</span>
-                          <span style={{ padding: '4px 10px', background: 'rgba(244,67,54,0.2)', color: '#F44336', borderRadius: '100px', fontSize: '10px' }}>🔥 {trend.traffic}</span>
-                        </div>
-                        {trend.articles && trend.articles.length > 0 && trend.articles[0] && (
-                          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
-                            📰 {trend.articles[0].source}: {trend.articles[0].title ? trend.articles[0].title.substring(0, 50) : ''}...
+                trends.length > 0 && (
+                  <div key={region} style={{ marginBottom: '32px' }}>
+                    <h3 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>{getFlag(region)} {region.replace('_', ' ')} - Whats Trending</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+                      {trends.slice(0, 6).map((trend, i) => (
+                        <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '14px', fontWeight: '600' }}>{trend.title}</span>
+                            <span style={{ padding: '4px 10px', background: 'rgba(244,67,54,0.2)', color: '#F44336', borderRadius: '100px', fontSize: '10px' }}>{trend.traffic}</span>
                           </div>
-                        )}
-                      </div>
-                    ))}
+                          {trend.articles && trend.articles.length > 0 && trend.articles[0] && (
+                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>📰 {trend.articles[0].source}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )
               ))
             ) : (
               <p style={{ color: 'rgba(255,255,255,0.5)' }}>Loading trending topics...</p>
             )}
-
             <h3 style={{ margin: '32px 0 16px', fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>💔 Mood Playlists</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
               {[
                 { mood: 'Heartbreak Season', emoji: '💔', color: '#E91E63', artists: 'Omah Lay, Oxlade, Ayra Starr' },
                 { mood: 'Road Trip Vibes', emoji: '🚗', color: '#FF9800', artists: 'Burna Boy, Rema, CKay' },
                 { mood: 'Late Night Feels', emoji: '🌙', color: '#9C27B0', artists: 'Cruel Santino, Tay Iwar, BNXN' },
-                { mood: 'Gym & Workout', emoji: '💪', color: '#F44336', artists: 'Asake, Shallipopi, Focalistic' },
-                { mood: 'Wedding Season', emoji: '💒', color: '#E91E63', artists: 'Davido, Tiwa Savage, Flavour' },
-                { mood: 'Focus & Study', emoji: '📚', color: '#2196F3', artists: 'Amaarae, Odunsi, Lady Donli' }
+                { mood: 'Gym & Workout', emoji: '💪', color: '#F44336', artists: 'Asake, Shallipopi, Focalistic' }
               ].map((item, i) => (
                 <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px', borderLeft: '3px solid ' + item.color }}>
                   <div style={{ fontSize: '28px', marginBottom: '8px' }}>{item.emoji}</div>
@@ -380,6 +381,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
