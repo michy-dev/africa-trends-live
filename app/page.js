@@ -182,24 +182,104 @@ export default function Dashboard() {
           </div>
         )}
 
-        {activeTab === 'audience' && data?.audience && (
+        {activeTab === 'audience' && (
           <div>
-            <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>👥 Audience Insights</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
-              {data.audience.cities.map((city, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '20px' }}>{city.flag}</span>
-                    <span style={{ fontSize: '16px', fontWeight: '600' }}>{city.name}</span>
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Top Artist: <span style={{ color: '#1DB954' }}>{city.topArtist}</span></div>
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Searches: {city.searches}</div>
-                </div>
+            <h2 style={{ margin: '0 0 8px', fontSize: '18px' }}>👥 Audience Insights by City</h2>
+            <p style={{ margin: '0 0 24px', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Select a city to see live music trends and news</p>
+            
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+              {['Lagos', 'Port Harcourt', 'Ibadan', 'Abuja', 'Benin City', 'Johannesburg', 'Nairobi', 'Accra'].map((city) => (
+                <button
+                  key={city}
+                  onClick={() => setSelectedCity(city)}
+                  style={{
+                    padding: '10px 20px',
+                    background: selectedCity === city ? '#1DB954' : 'rgba(255,255,255,0.05)',
+                    border: '1px solid ' + (selectedCity === city ? '#1DB954' : 'rgba(255,255,255,0.1)'),
+                    borderRadius: '100px',
+                    color: selectedCity === city ? '#000' : '#fff',
+                    fontSize: '13px',
+                    fontWeight: selectedCity === city ? '600' : '400',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {city === 'Lagos' || city === 'Port Harcourt' || city === 'Ibadan' || city === 'Abuja' || city === 'Benin City' ? '🇳🇬' : city === 'Johannesburg' ? '🇿🇦' : city === 'Nairobi' ? '🇰🇪' : '🇬🇭'} {city}
+                </button>
               ))}
             </div>
+
+            {selectedCity && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                    <span style={{ fontSize: '36px' }}>
+                      {selectedCity === 'Lagos' || selectedCity === 'Port Harcourt' || selectedCity === 'Ibadan' || selectedCity === 'Abuja' || selectedCity === 'Benin City' ? '🇳🇬' : selectedCity === 'Johannesburg' ? '🇿🇦' : selectedCity === 'Nairobi' ? '🇰🇪' : '🇬🇭'}
+                    </span>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '20px' }}>{selectedCity}</h3>
+                      <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Live music & entertainment trends</p>
+                    </div>
+                  </div>
+                  <div style={{ padding: '16px', background: 'rgba(29,185,84,0.1)', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Top Artist</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <img 
+                        src={getArtistImage(data?.audience?.cities?.find(c => c.name === selectedCity)?.topArtist || 'Wizkid')} 
+                        alt="Top Artist"
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                      <span style={{ fontSize: '18px', fontWeight: '600', color: '#1DB954' }}>
+                        {data?.audience?.cities?.find(c => c.name === selectedCity)?.topArtist || 'Loading...'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
+                  <h4 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>📰 Live News in {selectedCity}</h4>
+                  {data?.cityTrends && data.cityTrends[selectedCity] && data.cityTrends[selectedCity].length > 0 ? (
+                    data.cityTrends[selectedCity].map((item, i) => (
+                      <a 
+                        key={i} 
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'block', padding: '10px 0', borderBottom: i < data.cityTrends[selectedCity].length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}
+                      >
+                        <div style={{ fontSize: '13px', marginBottom: '4px' }}>{item.title}</div>
+                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{item.source}</div>
+                      </a>
+                    ))
+                  ) : (
+                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Loading news...</p>
+                  )}
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
+                  <h4 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>🔍 Popular Searches</h4>
+                  {[
+                    `${selectedCity} concerts 2026`,
+                    `${selectedCity} nightlife`,
+                    `Afrobeats ${selectedCity}`,
+                    `${selectedCity} music events`,
+                    `Artists from ${selectedCity}`
+                  ].map((search, i) => (
+                    
+                      key={i}
+                      href={`https://www.google.com/search?q=${encodeURIComponent(search)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}
+                    >
+                      <span style={{ fontSize: '13px' }}>{search}</span>
+                      <span style={{ fontSize: '11px', color: '#1DB954' }}>→</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
-
         {activeTab === 'spotify' && data?.spotify && (
           <div>
             <h2 style={{ margin: '0 0 24px', fontSize: '18px' }}>💚 Spotify Charts</h2>

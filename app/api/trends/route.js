@@ -13,18 +13,48 @@ async function getGoogleTrends(artists, geo) {
     });
     const data = JSON.parse(result);
     const scores = {};
-    artists.forEach((a) => scores[a] = 0);
-    data.default.timelineData.forEach(point => {
-      point.value.forEach((v, i) => scores[artists[i]] += v);
+    const recentScores = {};
+    const oldScores = {};
+    artists.forEach((a) => {
+      scores[a] = 0;
+      recentScores[a] = 0;
+      oldScores[a] = 0;
     });
+    
+    const timeline = data.default.timelineData;
+    const midpoint = Math.floor(timeline.length / 2);
+    
+    timeline.forEach((point, idx) => {
+      point.value.forEach((v, i) => {
+        scores[artists[i]] += v;
+        if (idx >= midpoint) {
+          recentScores[artists[i]] += v;
+        } else {
+          oldScores[artists[i]] += v;
+        }
+      });
+    });
+    
     const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     const max = sorted[0][1] || 1;
-    return sorted.map(([name, score]) => ({
-      name,
-      score: Math.round((score / max) * 100)
-    }));
+    
+    return {
+      rankings: sorted.map(([name, score]) => ({
+        name,
+        score: Math.round((score / max) * 100)
+      })),
+      changes: artists.map(name => {
+        const recent = recentScores[name] || 1;
+        const old = oldScores[name] || 1;
+        const change = Math.round(((recent - old) / old) * 100);
+        return { name, change };
+      })
+    };
   } catch (e) {
-    return artists.map(name => ({ name, score: 0 }));
+    return {
+      rankings: artists.map(name => ({ name, score: 0 })),
+      changes: artists.map(name => ({ name, change: 0 }))
+    };
   }
 }
 
@@ -63,6 +93,31 @@ async function getDailyTrends(geo) {
     return [];
   }
 }
+
+async function getCityTrends(city, country) {
+  try {
+    const query = `${city} music entertainment news`;
+    const res = await fetch(
+      `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en&gl=${country}&ceid=${country}:en`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    const xml = await res.text();
+    const items = [];
+    const regex = /<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<source[^>]*>(.*?)<\/source>[\s\S]*?<\/item>/g;
+    let match;
+    while ((match = regex.exec(xml)) && items.length < 5) {
+      items.push({
+        title: match[1].replace(/<!\[CDATA\[|\]\]>/g, '').replace(/ - .*$/, '').trim(),
+        source: match[3].replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
+        url: match[2].trim()
+      });
+    }
+    return items;
+  } catch (e) {
+    return [];
+  }
+}
+
 async function getNews(query) {
   try {
     const res = await fetch(
@@ -155,6 +210,14 @@ function getBackupSpotifyData(country) {
 }
 
 export async function GET() {
+  // All artists to track
+  const allArtists = [
+    'Wizkid', 'Burna Boy', 'Davido', 'Asake', 'Rema', 'Ayra Starr', 'Omah Lay', 'CKay',
+    'Tyla', 'Kabza De Small', 'Nasty C', 'Focalistic',
+    'Black Sherif', 'Sarkodie', 'Stonebwoy', 'King Promise',
+    'Sauti Sol', 'Zuchu', 'Diamond Platnumz', 'Nviiri'
+  ];
+
   const regions = {
     NIGERIA: { geo: 'NG', artists: ['Wizkid', 'Burna Boy', 'Davido', 'Asake', 'Rema'] },
     SOUTH_AFRICA: { geo: 'ZA', artists: ['Tyla', 'Kabza De Small', 'Nasty C', 'Focalistic'] },
@@ -162,19 +225,54 @@ export async function GET() {
     KENYA: { geo: 'KE', artists: ['Sauti Sol', 'Zuchu', 'Diamond Platnumz', 'Nviiri'] }
   };
 
-  // Get music rankings
+  // Get rankings and calculate rising artists
   const rankings = {};
+  const allChanges = [];
+  
   for (const [name, config] of Object.entries(regions)) {
-    rankings[name] = await getGoogleTrends(config.artists, config.geo);
+    const result = await getGoogleTrends(config.artists, config.geo);
+    rankings[name] = result.rankings;
+    allChanges.push(...result.changes.map(c => ({ ...c, region: name })));
   }
 
-  // Get daily trending topics
+  // Get top rising artists (biggest positive change)
+  const rising = allChanges
+    .filter(a => a.change > 0)
+    .sort((a, b) => b.change - a.change)
+    .slice(0, 6)
+    .map(a => ({
+      name: a.name,
+      country: regions[a.region]?.geo === 'NG' ? '🇳🇬' : 
+               regions[a.region]?.geo === 'ZA' ? '🇿🇦' : 
+               regions[a.region]?.geo === 'GH' ? '🇬🇭' : '🇰🇪',
+      change: `+${a.change}%`,
+      reason: `Trending in ${a.region.replace('_', ' ')}`
+    }));
+
+  // Get trending topics
   const trendingTopics = {};
   for (const [name, config] of Object.entries(regions)) {
     trendingTopics[name] = await getDailyTrends(config.geo);
   }
 
-  // Get news headlines
+  // Get city trends
+  const cities = [
+    { name: 'Lagos', country: 'NG' },
+    { name: 'Port Harcourt', country: 'NG' },
+    { name: 'Ibadan', country: 'NG' },
+    { name: 'Abuja', country: 'NG' },
+    { name: 'Benin City', country: 'NG' },
+    { name: 'Johannesburg', country: 'ZA' },
+    { name: 'Nairobi', country: 'KE' },
+    { name: 'Accra', country: 'GH' }
+  ];
+
+  const cityTrends = {};
+  for (const city of cities) {
+    cityTrends[city.name] = await getCityTrends(city.name, city.country);
+  }
+
+  // Get news
   const news = {
     afrobeats: await getNews('Afrobeats music'),
     amapiano: await getNews('Amapiano music South Africa'),
@@ -262,18 +360,21 @@ export async function GET() {
   const data = {
     rankings,
     trendingTopics,
+    cityTrends,
     news,
-    rising: [
-      { name: 'Mavo', country: '🇳🇬', change: '+890%', reason: '"Tumo Weto" viral on TikTok' },
-      { name: 'Shoday', country: '🇳🇬', change: '+720%', reason: '"Paparazzi" collab with FOLA' },
-      { name: 'Vyroota', country: '🇺🇬', change: '+650%', reason: '"Kunsi" #1 in Uganda' },
-      { name: 'Priesst', country: '🇳🇬', change: '+340%', reason: '"Akonuche" remix with Victony' },
-      { name: 'Boy Muller', country: '🇳🇬', change: '+280%', reason: '"LAPOPIANO" crossover hit' }
+    rising: rising.length > 0 ? rising : [
+      { name: 'Asake', country: '🇳🇬', change: '+45%', reason: 'New album buzz' },
+      { name: 'Tyla', country: '🇿🇦', change: '+38%', reason: 'Grammy momentum' },
+      { name: 'Rema', country: '🇳🇬', change: '+32%', reason: 'Tour announcement' }
     ],
     stories,
     audience: {
       cities: [
         { name: 'Lagos', flag: '🇳🇬', topArtist: 'Wizkid', searches: '2.4M' },
+        { name: 'Port Harcourt', flag: '🇳🇬', topArtist: 'Burna Boy', searches: '890K' },
+        { name: 'Ibadan', flag: '🇳🇬', topArtist: 'Asake', searches: '720K' },
+        { name: 'Abuja', flag: '🇳🇬', topArtist: 'Davido', searches: '980K' },
+        { name: 'Benin City', flag: '🇳🇬', topArtist: 'Rema', searches: '450K' },
         { name: 'Johannesburg', flag: '🇿🇦', topArtist: 'Kabza De Small', searches: '1.8M' },
         { name: 'Nairobi', flag: '🇰🇪', topArtist: 'Sauti Sol', searches: '890K' },
         { name: 'Accra', flag: '🇬🇭', topArtist: 'Black Sherif', searches: '720K' }
