@@ -274,21 +274,7 @@ export default function Dashboard() {
                     <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Loading news...</p>
                   )}
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '24px' }}>
-                  <h4 style={{ margin: '0 0 16px', fontSize: '14px', color: '#1DB954' }}>🔍 Trending Searches in {selectedCity}</h4>
-                  {data && data.cityTrends && data.cityTrends[selectedCity] && data.cityTrends[selectedCity].length > 0 ? (
-                    data.cityTrends[selectedCity].slice(0, 5).map(function(item, i) {
-                      return (
-                        <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none', textDecoration: 'none', color: '#fff' }}>
-                          <span style={{ fontSize: '13px' }}>{item.title}</span>
-                          <span style={{ fontSize: '11px', color: '#1DB954' }}>→</span>
-                        </a>
-                      );
-                    })
-                  ) : (
-                    <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Loading searches...</p>
-                  )}
-                </div>
+             
               </div>
             )}
           </div>
